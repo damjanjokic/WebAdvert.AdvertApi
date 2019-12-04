@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using AutoMapper;
 using AdvertApi.Services;
 using AdvertApi.IServices;
+using AdvertApi.HealthChecks;
+using Amazon.DynamoDBv2;
 
 namespace AdvertApi
 {
@@ -28,9 +30,13 @@ namespace AdvertApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
             services.AddAutoMapper(typeof(Startup));
             services.AddTransient<IAdvertStorageService, DynamoDBAdvertStorage>();
+            services.AddTransient<StorageHealthCheck>();
+            services.AddHealthChecks().AddCheck<StorageHealthCheck>("Storage");
             services.AddControllers();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,9 +53,12 @@ namespace AdvertApi
 
             app.UseAuthorization();
 
+            app.UseHealthChecks("/health");
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                //endpoints.MapHealthChecks("/health");
             });
         }
     }
